@@ -1,10 +1,11 @@
 [project]
-name = "blank-app-template"
+name = "finish-phq-lot-report"
 version = "0.1.0"
-description = "A simple Streamlit app template."
+description = "Streamlit dashboard for Finish PHQ lot review."
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+	"pandas",
     "streamlit>=1.61.1",
 ]
 

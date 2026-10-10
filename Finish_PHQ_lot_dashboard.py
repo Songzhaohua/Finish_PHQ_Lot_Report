@@ -5,10 +5,11 @@ import pandas as pd
 import streamlit as st
 
 
-CSV_PATH = os.environ.get(
-	"PHQ_CSV_PATH",
-	r"\\azATSHFS.intel.com\azATAnalysis$\MAOATM\CDAT\zhaohua\Finish_PHQ_lot.csv",
+# Streamlit Community Cloud reads the committed snapshot; on-prem can override it with the live share.
+DEFAULT_CSV_PATH = os.path.join(
+	os.path.dirname(__file__), "data", "Finish_PHQ_lot.csv"
 )
+CSV_PATH = os.environ.get("PHQ_CSV_PATH", DEFAULT_CSV_PATH)
 
 st.set_page_config(page_title="Finish PHQ Lot Report", layout="wide")
 
@@ -37,7 +38,7 @@ with st.sidebar:
 try:
 	df = load_data(CSV_PATH)
 except (OSError, pd.errors.ParserError, UnicodeError):
-	st.info("The internal CSV is unavailable on this server. Upload it only if your organization permits use of Streamlit Cloud for this data.")
+	st.info("The PHQ CSV snapshot is unavailable. Run sync_phq_data.bat on a company-network machine with Git access, or upload an approved CSV.")
 	uploaded_file = st.file_uploader("Finish PHQ lot CSV", type="csv")
 	if uploaded_file is None:
 		st.stop()

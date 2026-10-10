@@ -1,25 +1,25 @@
-# 🎈 Blank app template
+# Finish PHQ Lot Report
 
-A simple Streamlit app template for you to modify!
+A Streamlit dashboard for reviewing Finish PHQ lots.
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://blank-app-template.streamlit.app/)
+## Run locally
 
-### How to run it on your own machine
+Install dependencies and start the app with `uv`:
 
-Prerequisite: install `uv` if you don't already have it.
-
+```powershell
+uv sync
+uv run streamlit run streamlit_app.py
 ```
-$ curl -LsSf https://astral.sh/uv/install.sh | sh
+
+By default, the dashboard reads `data/Finish_PHQ_lot.csv`. To read the live internal share instead, set `PHQ_CSV_PATH` before starting Streamlit:
+
+```powershell
+$env:PHQ_CSV_PATH = '\\azATSHFS.intel.com\azATAnalysis$\MAOATM\CDAT\zhaohua\Finish_PHQ_lot.csv'
+uv run streamlit run streamlit_app.py
 ```
 
-1. Sync the dependencies
+## Refresh the Streamlit Cloud snapshot
 
-   ```
-   $ uv sync
-   ```
+Run `sync_phq_data.bat` on a Windows machine that can access the internal share and push to this GitHub repository. It copies the CSV into `data/`, commits that file, and pushes the change; Streamlit Cloud then redeploys from the updated repository. Use Windows Task Scheduler to run the batch file on the desired schedule, under an account with both share read access and Git push access.
 
-2. Run the app
-
-   ```
-   $ uv run streamlit run streamlit_app.py
-   ```
+**Data access:** The sync publishes the full CSV to this repository. Confirm that its visibility and contents are approved before running it. Each version remains in Git history even after later updates or file removal.

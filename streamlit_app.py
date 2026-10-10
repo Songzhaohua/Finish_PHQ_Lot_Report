@@ -1,6 +1,4 @@
-import streamlit as st
+from pathlib import Path
+import runpy
 
-st.title("🎈 My new app")
-st.write(
-    "Let's start building! For help and inspiration, head over to [docs.streamlit.io](https://docs.streamlit.io/)."
-)
+runpy.run_path(str(Path(__file__).with_name("Finish_PHQ_lot_dashboard.py")))
