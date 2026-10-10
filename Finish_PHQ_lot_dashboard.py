@@ -106,6 +106,8 @@ for (const cell of lotTable.querySelectorAll("tbody td:first-child")) {{
 	if (lot) {{
 		const link = document.createElement("a");
 		link.href = `http://cd6veuinlb.cd.intel.com/ETravelerUI/home/${{encodeURIComponent(lot.toLowerCase())}}/consolidate`;
+		link.target = "_blank";
+		link.rel = "noopener noreferrer";
 		link.textContent = lot;
 		link.title = "Open in ETraveler";
 		cell.replaceChildren(link);
