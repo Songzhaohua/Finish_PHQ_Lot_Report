@@ -18,9 +18,9 @@ st.set_page_config(page_title="Finish PHQ Lot Report", layout="wide")
 def load_data(path: str | BytesIO) -> pd.DataFrame:
 	data = pd.read_csv(path, dtype={"LOT": "string", "AT_MRB1": "string"})
 	data["QUANTITY"] = pd.to_numeric(data["QUANTITY"], errors="coerce").fillna(0)
-	data["DAYS_AT_OPERATION"] = pd.to_numeric(
-		data["DAYS_AT_OPERATION"], errors="coerce"
-	)
+	if "QUEUE_TIME" not in data and "DAYS_AT_OPERATION" in data:
+		data = data.rename(columns={"DAYS_AT_OPERATION": "QUEUE_TIME"})
+	data["QUEUE_TIME"] = pd.to_numeric(data["QUEUE_TIME"], errors="coerce")
 	data["DATE_ENTERED_OPERATION"] = pd.to_datetime(
 		data["DATE_ENTERED_OPERATION"], errors="coerce"
 	)
@@ -126,7 +126,7 @@ lots, quantity, on_hold, aging = st.columns(4)
 lots.metric("Lots", f"{filtered['LOT'].nunique():,}")
 quantity.metric("Total quantity", f"{filtered['QUANTITY'].sum():,.0f}")
 on_hold.metric("On hold", f"{filtered['ONHOLD'].eq('Y').sum():,}")
-aging.metric("Over 2 days at operation", f"{filtered['DAYS_AT_OPERATION'].gt(2).sum():,}")
+aging.metric("Queue time over 30 days", f"{filtered['QUEUE_TIME'].gt(30).sum():,}")
 
 by_group, by_owner, detail = st.tabs(["Product groups", "Owners & aging", "Lot detail"])
 
@@ -146,13 +146,13 @@ with by_owner:
 			lots=("LOT", "nunique"),
 			quantity=("QUANTITY", "sum"),
 			on_hold=("ONHOLD", lambda status: status.eq("Y").sum()),
-			average_days=("DAYS_AT_OPERATION", "mean"),
+			average_queue_time=("QUEUE_TIME", "mean"),
 		)
 		.sort_values("lots", ascending=False)
 	)
 	st.bar_chart(owner_summary["lots"], x_label="Owner", y_label="Lot Qty")
 	st.dataframe(owner_summary, width="stretch", column_config={
-		"average_days": st.column_config.NumberColumn("Average days", format="%.1f"),
+		"average_queue_time": st.column_config.NumberColumn("Average queue time", format="%.1f"),
 	})
 
 with detail:
