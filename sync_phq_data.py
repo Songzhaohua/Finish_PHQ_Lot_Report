@@ -2,12 +2,14 @@
 import shutil
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 
 SOURCE_PATH = r"\\azATSHFS.intel.com\azATAnalysis$\MAOATM\CDAT\zhaohua\Finish_PHQ_lot.csv"
 REPO_DIR = Path(__file__).parent
 DEST_PATH = REPO_DIR / "data" / "Finish_PHQ_lot.csv"
+UPDATED_PATH = DEST_PATH.with_suffix(".updated")
 
 
 def refresh_local_snapshot(
@@ -21,6 +23,10 @@ def refresh_local_snapshot(
 	try:
 		destination.parent.mkdir(parents=True, exist_ok=True)
 		shutil.copyfile(source, destination)
+		updated_at = datetime.fromtimestamp(source.stat().st_mtime, timezone.utc)
+		destination.with_suffix(".updated").write_text(
+			updated_at.isoformat(), encoding="utf-8"
+		)
 	except FileNotFoundError:
 		return False, f"Source CSV not found: {source}"
 	except OSError as exc:
@@ -41,16 +47,33 @@ def main() -> None:
 
 	print(message)
 	snapshot_path = str(DEST_PATH.relative_to(REPO_DIR))
-	run_git("add", "--", snapshot_path)
+	updated_path = str(UPDATED_PATH.relative_to(REPO_DIR))
+	run_git("add", "--", snapshot_path, updated_path)
 	result = subprocess.run(
-		["git", "diff", "--cached", "--quiet", "--", snapshot_path],
+		[
+			"git",
+			"diff",
+			"--cached",
+			"--quiet",
+			"--",
+		snapshot_path,
+			updated_path,
+		],
 		cwd=REPO_DIR,
 	)
 	if result.returncode == 0:
 		print("No data changes since last sync; nothing to push.")
 		return
 
-	run_git("commit", "--only", "-m", "Sync Finish PHQ lot data snapshot", "--", snapshot_path)
+	run_git(
+		"commit",
+		"--only",
+		"-m",
+		"Sync Finish PHQ lot data snapshot",
+		"--",
+		snapshot_path,
+		updated_path,
+	)
 	run_git("push")
 	print("PHQ data snapshot synced and pushed.")
 

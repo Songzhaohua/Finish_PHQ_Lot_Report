@@ -1,5 +1,6 @@
 import tempfile
 import unittest
+from datetime import datetime
 from pathlib import Path
 
 from sync_phq_data import refresh_local_snapshot
@@ -20,6 +21,14 @@ class RefreshPHQSnapshotTests(unittest.TestCase):
 				destination.read_text(encoding="utf-8"), "LOT,QUANTITY\nA,10\n"
 			)
 			self.assertIn("Copied", message)
+			updated_at = datetime.fromisoformat(
+				destination.with_suffix(".updated").read_text(
+					encoding="utf-8"
+				)
+			)
+			self.assertAlmostEqual(
+				updated_at.timestamp(), source.stat().st_mtime, places=5
+			)
 
 	def test_refresh_local_snapshot_reports_missing_source(self):
 		with tempfile.TemporaryDirectory() as temp_dir:

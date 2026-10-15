@@ -1,5 +1,8 @@
 import os
+from datetime import datetime, timezone
 from io import BytesIO
+from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 import streamlit as st
@@ -10,6 +13,7 @@ DEFAULT_CSV_PATH = os.path.join(
 	os.path.dirname(__file__), "data", "Finish_PHQ_lot.csv"
 )
 CSV_PATH = os.environ.get("PHQ_CSV_PATH", DEFAULT_CSV_PATH)
+UPDATED_PATH = Path(CSV_PATH).with_suffix(".updated")
 
 st.set_page_config(page_title="Finish PHQ Lot Report", layout="wide")
 
@@ -50,7 +54,15 @@ except (OSError, pd.errors.ParserError, UnicodeError):
 	source_label = f"Uploaded: {uploaded_file.name}"
 else:
 	try:
-		updated = pd.Timestamp.fromtimestamp(os.path.getmtime(CSV_PATH)).strftime(
+		try:
+			updated_at = datetime.fromisoformat(
+				UPDATED_PATH.read_text(encoding="utf-8")
+			)
+		except (OSError, ValueError):
+			updated_at = datetime.fromtimestamp(
+				os.path.getmtime(CSV_PATH), timezone.utc
+			)
+		updated = updated_at.astimezone(ZoneInfo("Asia/Shanghai")).strftime(
 			"%Y-%m-%d %H:%M"
 		)
 	except OSError:
