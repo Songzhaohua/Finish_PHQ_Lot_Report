@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -14,6 +14,7 @@ DEFAULT_CSV_PATH = os.path.join(
 )
 CSV_PATH = os.environ.get("PHQ_CSV_PATH", DEFAULT_CSV_PATH)
 UPDATED_PATH = Path(CSV_PATH).with_suffix(".updated")
+STALE_AFTER = timedelta(hours=3)
 
 st.set_page_config(page_title="Finish PHQ Lot Report", layout="wide")
 
@@ -65,6 +66,13 @@ else:
 		updated = updated_at.astimezone(ZoneInfo("Asia/Shanghai")).strftime(
 			"%Y-%m-%d %H:%M"
 		)
+		age = datetime.now(timezone.utc) - updated_at
+		if age > STALE_AFTER:
+			st.warning(
+				f"Data is {age.total_seconds() / 3600:.0f} hours old (last update {updated} Beijing time). "
+				"The sync machine may be asleep or offline.",
+				icon=":material/schedule:",
+			)
 	except OSError:
 		updated = "unknown"
 	source_label = f"Source updated: {updated}"
