@@ -40,14 +40,18 @@ def run_git(*args: str) -> None:
 
 
 def main() -> None:
+	snapshot_path = str(DEST_PATH.relative_to(REPO_DIR))
+	updated_path = str(UPDATED_PATH.relative_to(REPO_DIR))
+	# Generated files are recopied below; drop leftovers so the pull can fast-forward.
+	run_git("checkout", "HEAD", "--", snapshot_path, updated_path)
+	run_git("pull", "--ff-only")
+
 	ok, message = refresh_local_snapshot()
 	if not ok:
 		print(message, file=sys.stderr)
 		sys.exit(1)
 
 	print(message)
-	snapshot_path = str(DEST_PATH.relative_to(REPO_DIR))
-	updated_path = str(UPDATED_PATH.relative_to(REPO_DIR))
 	run_git("add", "--", snapshot_path, updated_path)
 	result = subprocess.run(
 		[
@@ -56,7 +60,7 @@ def main() -> None:
 			"--cached",
 			"--quiet",
 			"--",
-		snapshot_path,
+			snapshot_path,
 			updated_path,
 		],
 		cwd=REPO_DIR,
